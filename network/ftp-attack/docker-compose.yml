@@ -1,0 +1,47 @@
+version: '3.8'
+
+services: 
+  # FTP Server (victim)
+  ftp-victim:
+    image : garethflowers/ftp-server
+    container_name: ftp_victim
+    environment:
+      - FTP_USER=testuser
+      - FTP_PASS=welcome
+    ports:
+      - "21:21"
+      - "40000-40009:40000-40009"
+    networks:
+      attack_net:
+          ipv4_address: 192.168.10.50
+  
+  # FTP Client (attacker) with kali linux
+  attacker:
+    image: kalilinux/kali-rolling
+    container_name: ftp_attacker
+    command: bash -c "apt-get update && apt-get install -y ftp patator && tail -f /dev/null"
+    volumes:
+      - ./passwords:/passwords
+    networks:
+      attack_net:
+          ipv4_address: 192.168.10.73
+    depends_on:
+      - ftp-victim
+
+  # Traffic capture container
+  tcpdump:
+    image: corfr/tcpdump
+    container_name: traffic_monitor
+    command: -i eth0 -w /pcaps/ftp_attack.pcap
+    volumes:
+      - ./pcaps:/pcaps
+    network_mode: "service:ftp-victim"
+    depends_on:
+      - ftp-victim
+
+networks:
+  attack_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.10.0/24 

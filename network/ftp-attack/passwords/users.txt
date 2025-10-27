@@ -1,0 +1,15 @@
+admin
+testuser
+root
+administrator
+ftp
+anonymous
+guest
+webadmin
+user
+test
+ftpuser
+manager
+supervisor
+system
+operator

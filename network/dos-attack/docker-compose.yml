@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  victim:
+    image: nginx:alpine
+    container_name: dos_victim
+    ports:
+      - "8080:80"
+    networks:
+      dos_attack_net:
+          ipv4_address: 192.168.50.50
+  
+  attacker:
+    build:
+      context: .
+      dockerfile: Dockerfile.attacker
+    container_name: dos_attacker
+    tty: true
+    stdin_open: true
+    networks:
+      dos_attack_net:
+          ipv4_address: 192.168.50.70
+    depends_on:
+      - victim
+    volumes:
+      - ./scripts:/scripts
+  
+  tcpdump:
+    image: corfr/tcpdump
+    container_name: dos_monitor
+    command: -i eth0 -w /pcaps/dos_attack.pcap
+    volumes:
+      - ./pcaps:/pcaps
+    network_mode: "service:victim"
+    depends_on:
+      - victim
+
+networks:
+  dos_attack_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 192.168.50.0/24

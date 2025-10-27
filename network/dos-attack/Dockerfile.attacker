@@ -1,0 +1,25 @@
+FROM kalilinux/kali-rolling
+
+# update and install dos tools
+
+RUN apt-get update && \
+    apt-get install -y \
+    slowhttptest \
+    hping3 \
+    curl \
+    wget \
+    python3 \
+    python3-pip \
+    git && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Clone additional attack tools
+WORKDIR /tools
+RUN git clone https://github.com/c0d3xtekh/hulk-python-v3.git
+
+COPY dos_attack.sh /tools/dos_attack.sh
+RUN chmod +x /tools/dos_attack.sh
+
+# Keep container running
+CMD ["tail", "-f", "/dev/null"]
